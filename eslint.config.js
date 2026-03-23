@@ -23,4 +23,10 @@ export default defineConfig([
       "max-len": ["warn", { code: 100 }],
     },
   },
+  {
+    files: ['src/data.ts'],
+    rules: {
+      'max-len': ['warn', { code: 999 }],
+    },
+  },
 ]);

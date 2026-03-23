@@ -1,0 +1,96 @@
+header h1 {
+    text-align: center;
+    font-size: 36px;
+}
+
+footer {
+    text-align: center;
+    font-size: 1rem;
+    margin-top: 2rem;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.team {
+    background-color: white;
+    padding: 10px;
+}
+
+.team-table {
+    margin: 1rem 0;
+}
+
+.player-table {
+    margin: 1rem 0;
+    border-collapse: collapse;
+    line-height: normal;
+    font-size: .9rem;
+    width: 100%;
+    border: 1px solid black;
+}
+
+.player-table th,
+.player-table td {
+    border: 1px solid black;
+    padding: .1rem .2rem;
+}
+
+.player-table td.player-number {
+    text-align: center;
+    width: 25px;
+}
+
+.player-table td.player-name {
+    padding: 0;
+    width: 180px;
+
+    input {
+        width: 175px;
+        border: none;
+        padding: .1rem .2rem;
+    }
+}
+
+.player-table td.player-position {
+    padding: 0;
+    width: 180px;
+
+    select {
+        width: 100%;
+        border: none;
+    }
+
+    div.keywords {
+        font-size: .6rem;
+        padding: .1rem .2rem;
+    }
+}
+
+.player-table td.player-char {
+    width: 30px;
+    text-align: center;
+}
+
+/* .player-table td.player-skills {} */
+
+.player-table td.player-value {
+    width: 80px;
+    text-align: right;
+}
+
+.player-table td.swap-player {
+    width: 20px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.player-table td.swap-player-selected {
+    color: white;
+    background-color: black;
+}

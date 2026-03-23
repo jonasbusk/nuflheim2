@@ -1,0 +1,11 @@
+{
+  "printWidth": 100,
+  "overrides": [
+    {
+      "files": "src/data.ts",
+      "options": {
+        "printWidth": 999
+      }
+    }
+  ]
+}
