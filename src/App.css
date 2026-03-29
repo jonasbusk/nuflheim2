@@ -17,6 +17,10 @@ footer {
     text-align: center;
 }
 
+.text-right {
+    text-align: right;
+}
+
 .team {
     background-color: white;
     padding: 10px;

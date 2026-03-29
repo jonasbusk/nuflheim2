@@ -7,6 +7,12 @@ export interface TeamState {
   roster: string; // Key to the roster
   league: number; // Key to the league in the roster
   players: (Player | null)[]; // Array of players, null if the player slot is empty
+  budget: number; // Teamd Draft Budget
+  reRolls: number; // Number of re-rolls
+  assistantCoaches: number; // Number of assistant coaches
+  cheerleaders: number; // Number of cheerleaders
+  apothecary: number; // Whether the team has an apothecary
+  dedicatedFans: number; // Number of dedicated fans
 }
 
 // The Player should be as small as possible
