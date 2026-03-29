@@ -7,6 +7,8 @@ function PlayerTable({
   setPlayer,
   setPlayerName,
   swapPlayer,
+  formatCost,
+  getPlayerValue,
 }: {
   roster: Roster;
   players: (Player | null)[];
@@ -14,6 +16,8 @@ function PlayerTable({
   setPlayer: (playerNumber: number, positionNumber: number) => void;
   setPlayerName: (playerNumber: number, playerName: string) => void;
   swapPlayer: (playerNumber: number) => void;
+  formatCost: (cost: number) => string;
+  getPlayerValue: (player: Player | null) => number;
 }) {
   function renderPlayerSkills(player: Player | null): string {
     if (player) {
@@ -25,16 +29,13 @@ function PlayerTable({
 
   function renderPlayerValue(player: Player | null): string {
     if (player) {
-      return formatCost(roster.playerTypes[player.type - 1].cost);
+      return formatCost(getPlayerValue(player));
     } else {
       return "";
     }
   }
 
-  function formatCost(x: number): string {
-    // Format a number into a cost string, example: 10000 -> 10,000 GP
-    return `${x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} GP`;
-  }
+
 
   return (
     <table className="player-table">
