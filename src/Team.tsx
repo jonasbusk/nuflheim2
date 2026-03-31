@@ -1,6 +1,14 @@
 import { useState } from "react";
 
-import { type TeamState, type Player, type Roster, rosters } from "./data";
+import {
+  type TeamState,
+  type Player,
+  type PlayerProfile,
+  type Roster,
+  ANY_TEAM,
+  rosters,
+  starPlayers,
+} from "./data";
 import PlayerTable from "./PlayerTable";
 
 function Team() {
@@ -30,32 +38,56 @@ function Team() {
   // Store the selected player number, or 0 if no player is selected for swapping
   const [swapPlayerNumber, setSwapPlayerNumber] = useState<number>(0);
 
-  // Get roster from name
+  // Get roster from key
   const roster = rosters.find((r) => r.key === team.roster) as Roster;
+
+  // Get the available star players for the selected roster and league
+  const availableStarPlayers: PlayerProfile[] = starPlayers.filter(
+    (p) =>
+      p.playsFor?.includes(ANY_TEAM) ||
+      p.playsFor?.includes(roster.leagues[team.league - 1]) ||
+      p.playsFor?.some((r) => roster.specialRules.includes(r)),
+  );
+
+  function getPlayerProfile(player: Player | null): PlayerProfile | null {
+    return (
+      [...roster.playerProfiles, ...availableStarPlayers].find((p) => p.key === player?.key) || null
+    );
+  }
 
   function setPlayerName(playerNumber: number, playerName: string): void {
     const players = [...team.players];
-    if (players[playerNumber - 1]) {
-      players[playerNumber - 1]!.name = playerName;
+    const player = players[playerNumber - 1];
+    if (player) {
+      // Update or delete the name property
+      if (playerName.trim()) {
+        player.name = playerName.substring(0, 25);
+      } else {
+        delete player.name;
+      }
       setTeam({ ...team, players: players });
     }
   }
 
-  function setPlayer(playerNumber: number, positionNumber: number): void {
-    if (positionNumber === 0) {
-      // Clear the player
-      const players = [...team.players];
-      players[playerNumber - 1] = null;
-      setTeam({ ...team, players: players });
+  function setPlayer(playerNumber: number, playerKey: string): void {
+    const players = [...team.players];
+    // Search for matching player profile in the current roster and available star players
+    if (roster.playerProfiles.some((p) => p.key === playerKey)) {
+      // Found a match in the roster
+      // Keep the player name if it exists
+      if (players[playerNumber - 1]?.name) {
+        players[playerNumber - 1] = { key: playerKey, name: players[playerNumber - 1]?.name };
+      } else {
+        players[playerNumber - 1] = { key: playerKey };
+      }
+    } else if (availableStarPlayers.some((p) => p.key === playerKey)) {
+      // Found a match among the available star players
+      players[playerNumber - 1] = { key: playerKey };
     } else {
-      // Set new player
-      const players = [...team.players];
-      players[playerNumber - 1] = {
-        name: players[playerNumber - 1]?.name || "",
-        type: positionNumber,
-      };
-      setTeam({ ...team, players: players });
+      // Clear the player if no match is found
+      players[playerNumber - 1] = null;
     }
+    setTeam({ ...team, players: players });
   }
 
   function swapPlayer(playerNumber: number): void {
@@ -79,11 +111,8 @@ function Team() {
   }
 
   function getPlayerValue(player: Player | null): number {
-    if (player) {
-      return roster.playerTypes[player.type - 1].cost;
-    } else {
-      return 0;
-    }
+    const profile = getPlayerProfile(player);
+    return profile ? profile.cost : 0;
   }
 
   function getTeamValue(): number {
@@ -289,6 +318,8 @@ function Team() {
         roster={roster}
         players={team.players}
         swapPlayerNumber={swapPlayerNumber}
+        availableStarPlayers={availableStarPlayers}
+        getPlayerProfile={getPlayerProfile}
         setPlayer={setPlayer}
         setPlayerName={setPlayerName}
         swapPlayer={swapPlayer}
