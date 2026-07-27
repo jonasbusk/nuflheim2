@@ -21,6 +21,7 @@ import {
   starPlayers,
 } from "./data";
 import PlayerTable from "./PlayerTable";
+import { useTeamUrlState } from "./useTeamUrlState";
 
 function Team() {
   const defaultTeam: TeamState = {
@@ -43,9 +44,8 @@ function Team() {
   const costOfDedicatedFans = 5_000;
   const costOfApothecary = 50_000;
 
-  // Store entire team state in an object
-  // TODO: Store state in the URL
-  const [team, setTeam] = useState<TeamState>(defaultTeam);
+  // Store entire team state in an object, persisted in the URL
+  const [team, setTeam] = useTeamUrlState(defaultTeam);
 
   // Store the selected player number, or 0 if no player is selected for swapping
   const [swapPlayerNumber, setSwapPlayerNumber] = useState<number>(0);
@@ -450,8 +450,6 @@ function Team() {
         formatCost={formatCost}
         getPlayerValue={getPlayerValue}
       />
-      {/* show the team object for debugging */}
-      {/* <pre>{JSON.stringify(team, null, 2)}</pre> */}
     </div>
   );
 }
