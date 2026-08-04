@@ -11,6 +11,7 @@ function App() {
         <Team />
       </main>
       <footer>
+        <p>~ Nuflheim ~</p>
         <p>This is an unofficial and non-commercial fan website.</p>
       </footer>
     </>

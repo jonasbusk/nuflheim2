@@ -1,4 +1,17 @@
 import { type JSX } from "react";
+
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import { type Player, type PlayerProfile, type Roster, STAR_PLAYER } from "./data";
 
 function PlayerTable({
@@ -68,32 +81,53 @@ function PlayerTable({
             <tr key={playerNumber}>
               <td className="player-number">{playerNumber}</td>
               <td className="player-name">
-                <input
+                <Input
                   type="text"
                   value={player?.name || profile?.name || ""}
+                  maxLength={30}
                   readOnly={player === null || profile?.position === STAR_PLAYER}
                   onChange={(e) => setPlayerName(playerNumber, e.target.value)}
-                ></input>
+                />
               </td>
               <td className="player-position">
-                <select
+                <Select
+                  items={[
+                    {label: "-", value: "null"},
+                    ...roster.playerProfiles.map((p) => ({ label: p.position, value: p.key })),
+                    ...availableStarPlayers.map((p) => ({ label: "Star Player", value: p.key }))
+                  ]}
                   value={player?.key || "null"}
-                  onChange={(e) => setPlayer(playerNumber, e.target.value)}
+                  onValueChange={(value) => value && setPlayer(playerNumber, value)}
                 >
-                  <option key="null" value="null">
-                    -
-                  </option>
-                  {roster.playerProfiles.map((p: PlayerProfile) => (
-                    <option key={p.key} value={p.key}>
-                      {p.position}
-                    </option>
-                  ))}
-                  {availableStarPlayers.map((p) => (
-                    <option key={p.key} value={p.key}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="w-60">
+                    <SelectGroup>
+                      <SelectItem key="null" value="null">
+                        None
+                      </SelectItem>
+                    </SelectGroup>
+                    <SelectSeparator />
+                    <SelectGroup>
+                      <SelectLabel>Players</SelectLabel>
+                      {roster.playerProfiles.map((p: PlayerProfile) => (
+                        <SelectItem key={p.key} value={p.key}>
+                          {p.position} (0-{p.qty})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                    <SelectSeparator />
+                    <SelectGroup>
+                      <SelectLabel>Star Players</SelectLabel>
+                      {availableStarPlayers.map((p) => (
+                        <SelectItem key={p.key} value={p.key}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
                 <div className="keywords">{profile?.keywords.join(", ")}</div>
               </td>
               <td className="player-char">{profile?.ma}</td>
