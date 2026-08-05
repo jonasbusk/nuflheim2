@@ -7,6 +7,7 @@ export interface TeamState {
   coach: string; // Coach name
   roster: string; // Key to the selected roster
   league: number; // Key to the selected league in the roster
+  favouredOf?: number; // Key to the selected alignment in the roster
   players: (Player | null)[]; // Array of players, null if the player slot is empty
   budget: number; // Team Draft Budget
   reRolls: number; // Number of re-rolls
@@ -33,6 +34,7 @@ export interface Roster {
   name: string; // Roster name
   leagues: string[]; // Array of league options
   specialRules: string[]; // Array of special rules
+  favouredOf: string[]; // Favoured of special rule options
   playerProfiles: PlayerProfile[]; // Array of player profiles
   costOfReRolls: number; // Cost of re-rolls
   apothecaryAllowed: boolean; // Whether apothecary is allowed
@@ -71,6 +73,8 @@ export const STAR_PLAYER: string = "Star Player";
 
 /** Player keywords. */
 const keywords = {
+  animal: "Animal",
+  beastman: "Beastman",
   bigGuy: "Big Guy",
   blocker: "Blocker",
   blitzer: "Blitzer",
@@ -78,10 +82,16 @@ const keywords = {
   elf: "Elf",
   human: "Human",
   lineman: "Lineman",
+  minotaur: "Minotaur",
+  ogre: "Ogre",
   runner: "Runner",
   skeleton: "Skeleton",
+  spawn: "Spawn",
+  special: "Special",
   thrower: "Thrower",
+  troll: "Troll",
   undead: "Undead",
+  yhetee: "Yhetee",
 };
 
 /** Player skills and traits. */
@@ -221,17 +231,20 @@ const leagues = {
 const specialRules = {
   brawlinBrutes: "Brawlin' Brutes",
   briberyAndCorruption: "Bribery and Corruption",
-  favouredOf: "Favoured of...",
-  favouredOfHashut: "Favoured of Hashut",
-  favouredOfKhorne: "Favoured of Khorne",
-  favouredOfNurgle: "Favoured of Nurgle",
-  favouredOfSlaanesh: "Favoured of Slaanesh",
-  favouredOfTzeentch: "Favoured of Tzeentch",
-  favouredOfUndivided: "Favoured of Undivided",
   lowCostLinemen: "Low Cost Linemen",
   mastersOfUndeath: "Masters of Undeath",
   swarming: "Swarming",
   teamCaptain: "Team Captain",
+};
+
+/** Roster special rule "Favoured of..." */
+const favouredOf = {
+  hashut: "Hashut",
+  khorne: "Khorne",
+  nurgle: "Nurgle",
+  slaanesh: "Slaanesh",
+  tzeentch: "Tzeentch",
+  undivided: "Undivided",
 };
 
 /** All available rosters. */
@@ -242,6 +255,7 @@ export const rosters: Roster[] = [
     name: "Bretonnian",
     leagues: [leagues.oldWorldClassic],
     specialRules: [],
+    favouredOf: [],
     playerProfiles: [
       { key: "a", position: "Bretonnian Squire", keywords: [keywords.human, keywords.lineman], cost: 50_000, ma: 6, st: 3, ag: 3, pa: 4, av: 8, skills: [skills.wrestle], primary: "G", secondary: "AS", qty: 16 },
       { key: "b", position: "Bretonnian Knight Catcher", keywords: [keywords.catcher, keywords.human], cost: 85_000, ma: 7, st: 3, ag: 3, pa: 4, av: 9, skills: [skills.catch, skills.dauntless, skills.nervesOfSteel], primary: "AG", secondary: "S", qty: 2 },
@@ -252,10 +266,27 @@ export const rosters: Roster[] = [
     apothecaryAllowed: true,
   },
   {
+    key: "chaos-chosen",
+    name: "Chaos Chosen",
+    leagues: [leagues.chaosClash],
+    specialRules: [],
+    favouredOf: [favouredOf.undivided, favouredOf.tzeentch, favouredOf.slaanesh, favouredOf.nurgle, favouredOf.khorne, favouredOf.hashut],
+    playerProfiles: [
+      { key: "a", position: "Beastman Lineman", keywords: [keywords.beastman, keywords.lineman], cost: 55_000, ma: 6, st: 3, ag: 3, pa: 3, av: 9, skills: [skills.horns, skills.thickSkull], primary: "GM", secondary: "ADPS", qty: 16 },
+      { key: "b", position: "Chaos Chosen", keywords: [keywords.blocker, keywords.human], cost: 100_000, ma: 5, st: 4, ag: 3, pa: 5, av: 10, skills: [skills.armBar], primary: "GMS", secondary: "AD", qty: 4 },
+      { key: "c", position: "Troll", keywords: [keywords.bigGuy, keywords.troll], cost: 115_000, ma: 4, st: 5, ag: 5, pa: 5, av: 10, skills: [skills.alwaysHungry, skills.loner(4), skills.mightyBlow, skills.projectileVomit, skills.reallyStupid, skills.regeneration, skills.throwTeamMate], primary: "MS", secondary: "AGP", qty: 1 },
+      { key: "d", position: "Ogre", keywords: [keywords.bigGuy, keywords.ogre], cost: 140_000, ma: 5, st: 5, ag: 4, pa: 5, av: 10, skills: [skills.boneHead, skills.loner(4), skills.mightyBlow, skills.thickSkull, skills.throwTeamMate], primary: "MS", secondary: "AG", qty: 1 },
+      { key: "e", position: "Minotaur", keywords: [keywords.bigGuy, keywords.minotaur], cost: 150_000, ma: 5, st: 5, ag: 4, pa: 6, av: 9, skills: [skills.frenzy, skills.horns, skills.loner(4), skills.mightyBlow, skills.thickSkull, skills.unchannelledFury], primary: "MS", secondary: "AG", qty: 1 },
+    ],
+    costOfReRolls: 50_000,
+    apothecaryAllowed: true,
+  },
+  {
     key: "high-elf",
     name: "High Elf",
     leagues: [leagues.elvenKingdomsLeague],
     specialRules: [],
+    favouredOf: [],
     playerProfiles: [
       { key: "a", position: "High Elf Lineman", keywords: [keywords.elf, keywords.lineman], cost: 65_000, ma: 6, st: 3, ag: 2, pa: 3, av: 9, skills: [], primary: "AG", secondary: "S", qty: 16 },
       { key: "b", position: "White Lion", keywords: [keywords.blitzer, keywords.elf], cost: 110_000, ma: 7, st: 3, ag: 2, pa: 3, av: 9, skills: [skills.claws, skills.wrestle], primary: "AG", secondary: "PS", qty: 2 },
@@ -266,10 +297,28 @@ export const rosters: Roster[] = [
     apothecaryAllowed: true,
   },
   {
+    key: "norse",
+    name: "Norse",
+    leagues: [leagues.chaosClash, leagues.oldWorldClassic],
+    specialRules: [],
+    favouredOf: [favouredOf.khorne],
+    playerProfiles: [
+      { key: "a", position: "Norse Raider", keywords: [keywords.human, keywords.lineman], cost: 50_000, ma: 6, st: 3, ag: 3, pa: 4, av: 8, skills: [skills.block, skills.drunkard, skills.thickSkull, skills.unsteady], primary: "G", secondary: "APS", qty: 16 },
+      { key: "b", position: "Beer Boar", keywords: [keywords.animal, keywords.special], cost: 20_000, ma: 5, st: 1, ag: 3, pa: undefined, av: 6, skills: [skills.dodge, skills.noBall, skills.pickMeUp, skills.stunty, skills.titchy], primary: "", secondary: "A", qty: 2 },
+      { key: "c", position: "Norse Berserker", keywords: [keywords.blitzer, keywords.human], cost: 90_000, ma: 6, st: 3, ag: 3, pa: 5, av: 8, skills: [skills.block, skills.frenzy, skills.jumpUp], primary: "GS", secondary: "AP", qty: 2 },
+      { key: "d", position: "Valkyrie", keywords: [keywords.catcher, keywords.human, keywords.thrower], cost: 95_000, ma: 7, st: 3, ag: 3, pa: 3, av: 8, skills: [skills.catch, skills.dauntless, skills.pass, skills.stripBall], primary: "AGP", secondary: "S", qty: 2 },
+      { key: "e", position: "Ulfwerener", keywords: [keywords.blocker, keywords.human], cost: 105_000, ma: 6, st: 4, ag: 4, pa: 6, av: 9, skills: [skills.frenzy, skills.unsteady], primary: "GS", secondary: "A", qty: 2 },
+      { key: "f", position: "Yhetee", keywords: [keywords.bigGuy, keywords.yhetee], cost: 140_000, ma: 5, st: 5, ag: 4, pa: 6, av: 9, skills: [skills.claws, skills.disturbingPresence, skills.frenzy, skills.loner(4), skills.unchannelledFury], primary: "S", secondary: "AG", qty: 1 },
+    ],
+    costOfReRolls: 60_000,
+    apothecaryAllowed: true,
+  },
+  {
     key: "tomb-kings",
     name: "Tomb Kings",
     leagues: [leagues.sylvanianSpotlight],
     specialRules: [specialRules.mastersOfUndeath],
+    favouredOf: [],
     playerProfiles: [
       { key: "a", position: "Skeleton Lineman", keywords: [keywords.human, keywords.lineman, keywords.skeleton, keywords.undead], cost: 40_000, ma: 5, st: 3, ag: 4, pa: 6, av: 8, skills: [skills.regeneration, skills.thickSkull], primary: "G", secondary: "ADS", qty: 16 },
       { key: "b", position: "Tomb Kings Thrower", keywords: [keywords.human, keywords.skeleton, keywords.thrower, keywords.undead], cost: 65_000, ma: 6, st: 3, ag: 4, pa: 3, av: 9, skills: [skills.pass, skills.regeneration, skills.sureHands, skills.thickSkull], primary: "GP", secondary: "ADS", qty: 2 },
@@ -285,4 +334,6 @@ export const rosters: Roster[] = [
 export const starPlayers: PlayerProfile[] = [
   { key: "akhorne", name: "Akhorne the Squirrel", position: STAR_PLAYER, keywords: [keywords.blitzer, "Squirrel"], ma: 7, st: 1, ag: 2, pa: undefined, av: 6, skills: [skills.claws, skills.dauntless, skills.dodge, skills.frenzy, skills.jumpUp, skills.loner(4), skills.noBall, skills.sideStep, skills.stunty, skills.titchy], cost: 80_000, playsFor: [ANY_TEAM], specialRule: "Blind Rage" },
   { key: "griff", name: "Griff Oberwald", position: STAR_PLAYER, keywords: [keywords.blitzer, keywords.human], ma: 7, st: 4, ag: 2, pa: 3, av: 9, skills: [skills.block, skills.dodge, skills.fend, skills.loner(3), skills.sprint, skills.sureFeet], cost: 300_000, playsFor: [leagues.oldWorldClassic], specialRule: "Consummate Professional" },
+  { key: "grashnak", name: "Grashnak Blackhoof", position: STAR_PLAYER, keywords: [keywords.bigGuy, keywords.minotaur], ma: 6, st: 6, ag: 4, pa: 6, av: 9, skills: [skills.frenzy, skills.horns, skills.loner(4), skills.mightyBlow, skills.thickSkull, skills.unchannelledFury], cost: 240_000, playsFor: [leagues.chaosClash], specialRule: "Gored by the Bull" },
+  { key: "scyla", name: "Scyla Anfingrimm", position: STAR_PLAYER, keywords: [keywords.bigGuy, keywords.spawn], ma: 5, st: 5, ag: 4, pa: 6, av: 10, skills: [skills.claws, skills.frenzy, skills.loner(4), skills.mightyBlow, skills.prehensileTail, skills.thickSkull, skills.unchannelledFury], cost: 200_000, playsFor: [favouredOf.khorne], specialRule: "Fury of the Blood God" },
 ];

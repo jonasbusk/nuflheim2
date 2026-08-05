@@ -28,6 +28,7 @@ function Team() {
     coach: "",
     roster: rosters[0].key,
     league: 1,
+    favouredOf: rosters[0].favouredOf.length > 0 ? 1 : undefined,
     players: new Array(16).fill(null),
     budget: 1_000_000,
     reRolls: 0,
@@ -52,20 +53,58 @@ function Team() {
   // Get roster from key
   const roster = rosters.find((r) => r.key === team.roster) as Roster;
 
-  // Get the available star players for the selected roster and league
-  const availableStarPlayers: PlayerProfile[] = starPlayers.filter(
-    (p) =>
+  /** Check if a player profile is available for the given team state. */
+  function playsForTeam(p: PlayerProfile, t: TeamState): boolean {
+    return (roster.playerProfiles.includes(p) ||
       p.playsFor?.includes(ANY_TEAM) ||
-      p.playsFor?.includes(roster.leagues[team.league - 1]) ||
-      p.playsFor?.some((r) => roster.specialRules.includes(r)),
-  );
+      p.playsFor?.includes(roster.leagues[t.league - 1]) ||
+      p.playsFor?.some((r) => roster.specialRules.includes(r)) ||
+      (t.favouredOf && p.playsFor?.includes(roster.favouredOf[t.favouredOf - 1]))) as boolean;
+  }
 
+  // Get the available star players for the selected team state
+  const availableStarPlayers = starPlayers.filter((p) => playsForTeam(p, team));
+
+  /** Remove players from the team that are not available with given team state. */
+  function filterTeamPlayers(team: TeamState): TeamState {
+    return {
+      ...team,
+      players: team.players.map((player) => {
+        const profile = getPlayerProfile(player);
+        return profile && playsForTeam(profile, team) ? player : null;
+      }),
+    };
+  }
+
+  /** Reset the team state and set the roster. */
+  function setRoster(key: string): void {
+    if (key !== team.roster) {
+      const roster = rosters.find((r) => r.key === key) as Roster;
+      const favouredOf = roster.favouredOf.length > 0 ? 1 : undefined;
+      setTeam({ ...defaultTeam, roster: key, favouredOf: favouredOf });
+    }
+  }
+
+  /** Set the team league and filter the team players. */
+  function setLeague(key: number): void {
+    // Norse is a special case where favouredOf is determined by the league
+    const favouredOf = team.roster === "norse" ? (key === 1 ? 1 : undefined) : team.favouredOf;
+    setTeam(filterTeamPlayers({ ...team, league: key, favouredOf: favouredOf }));
+  }
+
+  /** Set the team favouredOf special rule and filter the team players. */
+  function setFavouredOf(favouredOf: number): void {
+    setTeam(filterTeamPlayers({ ...team, favouredOf: favouredOf }));
+  }
+
+  /** Get the player profile for a given player. */
   function getPlayerProfile(player: Player | null): PlayerProfile | null {
     return (
       [...roster.playerProfiles, ...availableStarPlayers].find((p) => p.key === player?.key) || null
     );
   }
 
+  /** Set the name of the player with the given player number. */
   function setPlayerName(playerNumber: number, playerName: string): void {
     const players = [...team.players];
     const player = players[playerNumber - 1];
@@ -80,6 +119,7 @@ function Team() {
     }
   }
 
+  /** Set the player with the given player number to a player with the given key or null. */
   function setPlayer(playerNumber: number, playerKey: string): void {
     const players = [...team.players];
     // Search for matching player profile in the current roster and available star players
@@ -101,6 +141,7 @@ function Team() {
     setTeam({ ...team, players: players });
   }
 
+  /** Select a player to swap or swap two players if a player is already selected */
   function swapPlayer(playerNumber: number): void {
     if (swapPlayerNumber === 0) {
       // Select the player to swap
@@ -116,16 +157,19 @@ function Team() {
     }
   }
 
+  /** Format a number as a cost string. */
   function formatCost(x: number): string {
     // Format a number into a cost string, example: 10000 -> 10,000 GP
     return `${x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} GP`;
   }
 
+  /** Get the total value of a player */
   function getPlayerValue(player: Player | null): number {
     const profile = getPlayerProfile(player);
     return profile ? profile.cost : 0;
   }
 
+  /** Get the total team value. */
   function getTeamValue(): number {
     let teamValue = 0;
     teamValue += team.players.reduce((sum, player) => sum + getPlayerValue(player), 0);
@@ -137,6 +181,7 @@ function Team() {
     return teamValue;
   }
 
+  /** Get the remaining treasury. */
   function getTreasury(): number {
     let treasury = team.budget;
     treasury -= getTeamValue();
@@ -177,9 +222,7 @@ function Team() {
                 <Select
                   items={rosters.map((roster) => ({ label: roster.name, value: roster.key }))}
                   value={team.roster}
-                  onValueChange={(value) =>
-                    value && setTeam({ ...defaultTeam, roster: value, league: 1 })
-                  }
+                  onValueChange={(value) => value && setRoster(value)}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue />
@@ -206,7 +249,8 @@ function Team() {
                     label: league,
                     value: index + 1,
                   }))}
-                  onValueChange={(value) => value && setTeam({ ...team, league: value })}
+                  readOnly={roster.leagues.length <= 1}
+                  onValueChange={(value) => value && setLeague(value)}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue />
@@ -225,25 +269,35 @@ function Team() {
               </td>
             </tr>
             <tr>
-              <td>Treasury:</td>
+              <td>Favoured of:</td>
               <td>
-                <Input
-                  type="text"
-                  className="text-right"
-                  value={formatCost(getTreasury())}
-                  readOnly
-                />
-              </td>
-            </tr>
-            <tr>
-              <td>Team Value:</td>
-              <td>
-                <Input
-                  type="text"
-                  className="text-right"
-                  value={formatCost(getTeamValue())}
-                  readOnly
-                />
+                <Select
+                  // If favouredOf is undefined, set the value to -1 and show "None"
+                  value={team.favouredOf === undefined ? -1 : team.favouredOf}
+                  items={[
+                    { label: "None", value: -1 },
+                    ...roster.favouredOf.map((alignment, index) => ({
+                      label: alignment,
+                      value: index + 1,
+                    })),
+                  ]}
+                  readOnly={roster.favouredOf.length <= 1}
+                  onValueChange={(value) => value && setFavouredOf(value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Alignments</SelectLabel>
+                      {roster.favouredOf.map((alignment, index) => (
+                        <SelectItem key={alignment} value={index + 1}>
+                          {alignment}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               </td>
             </tr>
           </tbody>
@@ -342,6 +396,41 @@ function Team() {
               <td>x</td>
               <td className="text-right">{formatCost(costOfApothecary)}</td>
               <td className="text-right">{formatCost(costOfApothecary * team.apothecary)}</td>
+            </tr>
+            {/* <tr>
+              <td colSpan={5}>&nbsp;</td>
+            </tr> */}
+          </tbody>
+        </table>
+        <table id="team-table-3">
+          <tbody>
+            <tr>
+              <td>Treasury:</td>
+              <td>
+                <Input
+                  type="text"
+                  className="text-right"
+                  value={formatCost(getTreasury())}
+                  readOnly
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>Team Value:</td>
+              <td>
+                <Input
+                  type="text"
+                  className="text-right"
+                  value={formatCost(getTeamValue())}
+                  readOnly
+                />
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={5}>&nbsp;</td>
+            </tr>
+            <tr>
+              <td colSpan={5}>&nbsp;</td>
             </tr>
             <tr>
               <td colSpan={5}>&nbsp;</td>
