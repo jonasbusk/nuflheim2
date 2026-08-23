@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -10,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 import {
   type TeamState,
@@ -17,6 +19,7 @@ import {
   type PlayerProfile,
   type Roster,
   ANY_TEAM,
+  variants,
   rosters,
   starPlayers,
 } from "./data";
@@ -25,24 +28,20 @@ import { useTeamUrlState } from "./useTeamUrlState";
 
 function Team() {
   const defaultTeam: TeamState = {
+    variant: "standard",
+    budget: 1_000_000,
     name: "",
     coach: "",
     roster: rosters[0].key,
     league: 1,
     favouredOf: rosters[0].favouredOf.length > 0 ? 1 : undefined,
     players: new Array(16).fill(null),
-    budget: 1_000_000,
     reRolls: 0,
     assistantCoaches: 0,
     cheerleaders: 0,
     dedicatedFans: 0,
     apothecary: 0,
   };
-
-  const costOfAssistantCoaches = 10_000;
-  const costOfCheerleaders = 10_000;
-  const costOfDedicatedFans = 5_000;
-  const costOfApothecary = 50_000;
 
   // Store entire team state in an object, persisted in the URL
   const [team, setTeam] = useTeamUrlState(defaultTeam);
@@ -52,6 +51,19 @@ function Team() {
 
   // Get roster from key
   const roster = rosters.find((r) => r.key === team.roster) as Roster;
+
+  // Define constants based on the rules variant and roster
+  const costOfReRolls = team.variant === "sevens" ? 100_000 : roster.costOfReRolls;
+  const costOfAssistantCoaches = team.variant === "sevens" ? 20_000 : 10_000;
+  const costOfCheerleaders = team.variant === "sevens" ? 20_000 : 10_000;
+  const costOfDedicatedFans = team.variant === "sevens" ? 20_000 : 5_000;
+  const costOfApothecary = team.variant === "sevens" ? 80_000 : 50_000;
+  const maxReRolls = 8;
+  const maxAssistantCoaches = team.variant === "sevens" ? 3 : 6;
+  const maxCheerleaders = team.variant === "sevens" ? 3 : 6;
+  const maxApothecary = 1;
+  // TODO: Check Sevens Matched Play rules
+  const maxDedicatedFans = 3;
 
   /** Check if a player profile is available for the given team state. */
   function playsForTeam(p: PlayerProfile, t: TeamState): boolean {
@@ -65,15 +77,21 @@ function Team() {
   // Get the available star players for the selected team state
   const availableStarPlayers = starPlayers.filter((p) => playsForTeam(p, team));
 
-  /** Remove players from the team that are not available with given team state. */
-  function filterTeamPlayers(team: TeamState): TeamState {
-    return {
-      ...team,
-      players: team.players.map((player) => {
-        const profile = getPlayerProfile(player);
-        return profile && playsForTeam(profile, team) ? player : null;
-      }),
-    };
+  /** Set the team variant and values that depend on the variant. */
+  function setVariant(variant: keyof typeof variants): void {
+    if (variant !== team.variant) {
+      const budget = variant === "sevens" ? 600_000 : 1_000_000;
+      setTeam({
+        ...team,
+        variant: variant,
+        budget: budget,
+        reRolls: 0,
+        assistantCoaches: 0,
+        cheerleaders: 0,
+        dedicatedFans: 0,
+        apothecary: 0,
+      });
+    }
   }
 
   /** Reset the team state and set the roster. */
@@ -81,7 +99,15 @@ function Team() {
     if (key !== team.roster) {
       const roster = rosters.find((r) => r.key === key) as Roster;
       const favouredOf = roster.favouredOf.length > 0 ? 1 : undefined;
-      setTeam({ ...defaultTeam, roster: key, favouredOf: favouredOf });
+      setTeam({
+        ...defaultTeam,
+        variant: team.variant,
+        budget: team.budget,
+        name: team.name,
+        coach: team.coach,
+        roster: key,
+        favouredOf: favouredOf,
+      });
     }
   }
 
@@ -95,6 +121,17 @@ function Team() {
   /** Set the team favouredOf special rule and filter the team players. */
   function setFavouredOf(favouredOf: number): void {
     setTeam(filterTeamPlayers({ ...team, favouredOf: favouredOf }));
+  }
+
+    /** Remove players from the team that are not available with given team state. */
+  function filterTeamPlayers(team: TeamState): TeamState {
+    return {
+      ...team,
+      players: team.players.map((player) => {
+        const profile = getPlayerProfile(player);
+        return profile && playsForTeam(profile, team) ? player : null;
+      }),
+    };
   }
 
   /** Get the player profile for a given player. */
@@ -173,7 +210,7 @@ function Team() {
   function getTeamValue(): number {
     let teamValue = 0;
     teamValue += team.players.reduce((sum, player) => sum + getPlayerValue(player), 0);
-    teamValue += team.reRolls * roster.costOfReRolls;
+    teamValue += team.reRolls * costOfReRolls;
     teamValue += team.assistantCoaches * costOfAssistantCoaches;
     teamValue += team.cheerleaders * costOfCheerleaders;
     // Note: Dedicated fans do not add to team value
@@ -190,7 +227,48 @@ function Team() {
   }
 
   return (
-    <div className="team">
+    <div className="team flex flex-col gap-5">
+      <Separator />
+      <div className="flex flex-wrap gap-5">
+        <FieldLabel className="text-md font-bold">Settings:</FieldLabel>
+        <FieldGroup className="grid max-w-sm grid-cols-2">
+          <Field orientation="horizontal">
+            <FieldLabel className="text-md">Variant:</FieldLabel>
+            <Select
+              items={Object.entries(variants).map(([key, label]) => ({ label, value: key }))}
+              value={team.variant}
+              onValueChange={(value) => value && setVariant(value)}
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Variants</SelectLabel>
+                  {Object.entries(variants).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field orientation="horizontal">
+            <FieldLabel className="text-md">Budget:</FieldLabel>
+            <Input
+              type="number"
+              className="text-right w-32"
+              value={team.budget}
+              onChange={(e) =>
+                setTeam({ ...team, budget: Math.max(parseInt(e.target.value) || 0, 0) })
+              }
+            />
+            <FieldLabel className="text-md">GP</FieldLabel>
+          </Field>
+        </FieldGroup>
+      </div>
+      <Separator />
       <div className="flex flex-wrap gap-5">
         <table id="team-table-1">
           <tbody>
@@ -313,14 +391,14 @@ function Team() {
                   onChange={(e) =>
                     setTeam({
                       ...team,
-                      reRolls: Math.min(Math.max(parseInt(e.target.value) || 0, 0), 8),
+                      reRolls: Math.min(Math.max(parseInt(e.target.value) || 0, 0), maxReRolls),
                     })
                   }
                 />
               </td>
               <td>x</td>
-              <td className="text-right">{formatCost(roster.costOfReRolls)}</td>
-              <td className="text-right">{formatCost(roster.costOfReRolls * team.reRolls)}</td>
+              <td className="text-right">{formatCost(costOfReRolls)}</td>
+              <td className="text-right">{formatCost(costOfReRolls * team.reRolls)}</td>
             </tr>
             <tr>
               <td>Assistant Coaches:</td>
@@ -331,7 +409,10 @@ function Team() {
                   onChange={(e) =>
                     setTeam({
                       ...team,
-                      assistantCoaches: Math.min(Math.max(parseInt(e.target.value) || 0, 0), 6),
+                      assistantCoaches: Math.min(
+                        Math.max(parseInt(e.target.value) || 0, 0),
+                        maxAssistantCoaches,
+                      ),
                     })
                   }
                 />
@@ -351,7 +432,10 @@ function Team() {
                   onChange={(e) =>
                     setTeam({
                       ...team,
-                      cheerleaders: Math.min(Math.max(parseInt(e.target.value) || 0, 0), 6),
+                      cheerleaders: Math.min(
+                        Math.max(parseInt(e.target.value) || 0, 0),
+                        maxCheerleaders,
+                      ),
                     })
                   }
                 />
@@ -369,7 +453,10 @@ function Team() {
                   onChange={(e) =>
                     setTeam({
                       ...team,
-                      dedicatedFans: Math.min(Math.max(parseInt(e.target.value) || 0, 0), 3),
+                      dedicatedFans: Math.min(
+                        Math.max(parseInt(e.target.value) || 0, 0),
+                        maxDedicatedFans,
+                      ),
                     })
                   }
                 />
@@ -387,7 +474,10 @@ function Team() {
                   onChange={(e) =>
                     setTeam({
                       ...team,
-                      apothecary: Math.min(Math.max(parseInt(e.target.value) || 0, 0), 1),
+                      apothecary: Math.min(
+                        Math.max(parseInt(e.target.value) || 0, 0),
+                        maxApothecary,
+                      ),
                     })
                   }
                   readOnly={!roster.apothecaryAllowed}

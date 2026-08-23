@@ -3,13 +3,14 @@
 /** The overall state of a team draft list. */
 // Note: Should be as small as possible
 export interface TeamState {
+  variant: keyof typeof variants; // The selected rules variant
+  budget: number; // The total team budget
   name: string; // Team name
   coach: string; // Coach name
   roster: string; // Key to the selected roster
   league: number; // Key to the selected league in the roster
   favouredOf?: number; // Key to the selected alignment in the roster
   players: (Player | null)[]; // Array of players, null if the player slot is empty
-  budget: number; // Team Draft Budget
   reRolls: number; // Number of re-rolls
   assistantCoaches: number; // Number of assistant coaches
   cheerleaders: number; // Number of cheerleaders
@@ -70,6 +71,12 @@ export const ANY_TEAM: string = "Any Team";
 export const STAR_PLAYER: string = "Star Player";
 
 // Data
+
+/** Rules variants for the team draft list. */
+export const variants = {
+  standard: "Standard",
+  sevens: "Sevens",
+}
 
 /** Player keywords. */
 const keywords = {
