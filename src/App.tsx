@@ -5,7 +5,7 @@ function App() {
   return (
     <>
       <header>
-        <h1>Nuflheim Team Draft List</h1>
+          <h1>Nuflheim Team Draft List</h1>
       </header>
       <main>
         <Team />

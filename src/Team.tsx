@@ -3,6 +3,17 @@ import { useState } from "react";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
+  Combobox,
+  ComboboxCollection,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxGroup,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxLabel,
+  ComboboxList,
+} from "@/components/ui/combobox";
+import {
   Select,
   SelectContent,
   SelectGroup,
@@ -319,25 +330,31 @@ function Team() {
             <tr>
               <td>Roster:</td>
               <td>
-                <Select
+                <Combobox
                   items={rosters.map((roster) => ({ label: roster.name, value: roster.key }))}
-                  value={team.roster}
-                  onValueChange={(value) => value && setRoster(value)}
+                  value={{ label: roster.name, value: roster.key }}
+                  onValueChange={(item) => item && setRoster(item.value)}
+                  isItemEqualToValue={(a, b) => a.value === b.value}
+                  itemToStringValue={(item) => item.label}
+                  autoHighlight
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Rosters</SelectLabel>
-                      {rosters.map((roster) => (
-                        <SelectItem key={roster.key} value={roster.key}>
-                          {roster.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                  <ComboboxInput placeholder="Select a roster" />
+                  <ComboboxContent>
+                    <ComboboxEmpty>No roster found</ComboboxEmpty>
+                    <ComboboxList>
+                      <ComboboxGroup>
+                        <ComboboxLabel>Rosters</ComboboxLabel>
+                        <ComboboxCollection>
+                          {(item) => (
+                            <ComboboxItem key={item.value} value={item}>
+                              {item.label}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxCollection>
+                      </ComboboxGroup>
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
               </td>
             </tr>
             <tr>
