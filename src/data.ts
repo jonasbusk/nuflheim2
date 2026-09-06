@@ -16,6 +16,7 @@ export interface TeamState {
   cheerleaders: number; // Number of cheerleaders
   apothecary: number; // Whether the team has an apothecary
   dedicatedFans: number; // Number of dedicated fans
+  inducements: Record<string, number>; // Number of each inducement
 }
 
 /** A player in the team draft list.
@@ -76,7 +77,7 @@ export const STAR_PLAYER: string = "Star Player";
 export const variants = {
   standard: "Standard",
   sevens: "Sevens",
-}
+};
 
 /** Player keywords. */
 const keywords = {
@@ -861,5 +862,107 @@ export const starPlayers: PlayerProfile[] = [
   { key: "willow", name: "Willow Rosebark", position: STAR_PLAYER, keywords: [keywords.blitzer, keywords.dryad], ma: 6, st: 4, ag: 3, pa: 5, av: 9, skills: [skills.dauntless, skills.loner(4), skills.sideStep, skills.thickSkull], cost: 160_000, playsFor: [leagues.woodlandLeague], specialRule: "Woodland Fury" },
   { key: "withergrasp", name: "Withergrasp Doubledrool", position: STAR_PLAYER, keywords: [keywords.beastman, keywords.blocker], ma: 6, st: 3, ag: 3, pa: 4, av: 9, skills: [skills.foulAppearance, skills.loner(4), skills.prehensileTail, skills.tackle, skills.tentacles, skills.twoHeads, skills.wrestle], cost: 170_000, playsFor: [favouredOf.nurgle], specialRule: "Watch Out!" },
   { key: "zolcath", name: "Zolcath the Zoat", position: STAR_PLAYER, keywords: [keywords.bigGuy, keywords.zoat], ma: 5, st: 5, ag: 4, pa: 5, av: 10, skills: [skills.disturbingPresence, skills.juggernaut, skills.loner(4), skills.mightyBlow, skills.prehensileTail, skills.regeneration, skills.sureFeet], cost: 220_000, playsFor: [leagues.elvenKingdomsLeague, leagues.lustrianSuperleague], specialRule: "Excuse me, are you a Zoat?" },
-  { key: "zzharg", name: "Zzharg Madeye", position: STAR_PLAYER, keywords: [keywords.dwarf, keywords.special], ma: 4, st: 4, ag: 4, pa: 3, av: 10, skills: [skills.cannoneer, skills.hailMaryPass, skills.loner(4), skills.nervesOfSteel, skills.secretWeapon, skills.thickSkull], cost: 130_000, playsFor: [favouredOf.hashut], specialRule: "Blastin’ Solves Everything" }
+  { key: "zzharg", name: "Zzharg Madeye", position: STAR_PLAYER, keywords: [keywords.dwarf, keywords.special], ma: 4, st: 4, ag: 4, pa: 3, av: 10, skills: [skills.cannoneer, skills.hailMaryPass, skills.loner(4), skills.nervesOfSteel, skills.secretWeapon, skills.thickSkull], cost: 130_000, playsFor: [favouredOf.hashut], specialRule: "Blastin’ Solves Everything" },
 ];
+
+// Inducements
+
+/** All inducements. */
+export const inducements = {
+  prayers: "Prayers to Nuffle",
+  coaches: "Part-time Assistant Coaches",
+  cheers: "Temp Agency Cheerleaders",
+  mascot: "Team Mascot",
+  weathMag: "Weather Mage",
+  kegs: "Blitzer’s Best Kegs",
+  bribes: "Bribes",
+  extraTT: "Extra Team Training",
+  mortAsst: "Mortuary Assistant",
+  plagDoc: "Plague Doctor",
+  rookies: "Riotous Rookies",
+  wandApo: "Wandering Apothecary",
+  chef: "Halfling Master Chef",
+  dodgyRep: "Biased Referee: Dodgy League Rep",
+  bugman: "Infamous Coaching Staff: Josef Bugman",
+  sportsWiz: "Wizard: Sports-Wizard",
+  despMeas: "Desperate Measures",
+};
+
+/** An available inducement with max and cost according to the current state. */
+export interface AvailableInducement {
+  key: keyof typeof inducements;
+  max: number;
+  cost: number;
+}
+
+/** Get the available inducements for a given roster and rules variant. */
+export function getAvailableInducements(team: TeamState): AvailableInducement[] {
+  const roster = rosters.find((r) => r.key === team.roster) as Roster;
+  const result: AvailableInducement[] = [];
+  if (team.variant === "sevens") {
+    result.push({ key: "cheers", max: 2, cost: 15_000 });
+    result.push({ key: "coaches", max: 2, cost: 15_000 });
+    result.push({ key: "kegs", max: 2, cost: 50_000 });
+    result.push({ key: "prayers", max: 2, cost: 5_000 });
+    result.push({ key: "extraTT", max: 6, cost: 125_000 });
+    if (roster.specialRules.includes(specialRules.briberyAndCorruption)) {
+      result.push({ key: "bribes", max: 2, cost: 50_000 });
+    } else {
+      result.push({ key: "bribes", max: 2, cost: 100_000 });
+    }
+    if (roster.apothecaryAllowed) {
+      result.push({ key: "wandApo", max: 1, cost: 100_000 });
+    }
+    if (roster.specialRules.includes(specialRules.mastersOfUndeath)) {
+      result.push({ key: "mortAsst", max: 1, cost: 100_000 });
+    }
+    if (team.favouredOf && roster.favouredOf[team.favouredOf - 1] === favouredOf.nurgle) {
+      result.push({ key: "plagDoc", max: 1, cost: 100_000 });
+    }
+    if (team.roster === "halfling") {
+      result.push({ key: "chef", max: 1, cost: 100_000 });
+    } else {
+      result.push({ key: "chef", max: 1, cost: 300_000 });
+    }
+    result.push({ key: "despMeas", max: 5, cost: 50_000 });
+  } else {
+    // variant standard
+    result.push({ key: "prayers", max: 3, cost: 10_000 });
+    result.push({ key: "coaches", max: 5, cost: 20_000 });
+    result.push({ key: "cheers", max: 5, cost: 5_000 });
+    result.push({ key: "mascot", max: 1, cost: 25_000 });
+    result.push({ key: "weathMag", max: 1, cost: 25_000 });
+    result.push({ key: "kegs", max: 2, cost: 50_000 });
+    if (roster.specialRules.includes(specialRules.briberyAndCorruption)) {
+      result.push({ key: "bribes", max: 6, cost: 50_000 });
+    } else {
+      result.push({ key: "bribes", max: 3, cost: 100_000 });
+    }
+    result.push({ key: "extraTT", max: 8, cost: 100_000 });
+    if (roster.specialRules.includes(specialRules.mastersOfUndeath)) {
+      result.push({ key: "mortAsst", max: 1, cost: 100_000 });
+    }
+    if (team.favouredOf && roster.favouredOf[team.favouredOf - 1] === favouredOf.nurgle) {
+      result.push({ key: "plagDoc", max: 1, cost: 100_000 });
+    }
+    if (roster.specialRules.includes(specialRules.lowCostLinemen)) {
+      result.push({ key: "rookies", max: 1, cost: 150_000 });
+    }
+    if (roster.apothecaryAllowed) {
+      result.push({ key: "wandApo", max: 2, cost: 100_000 });
+    }
+    if (team.roster === "halfling") {
+      result.push({ key: "chef", max: 1, cost: 100_000 });
+    } else {
+      result.push({ key: "chef", max: 1, cost: 300_000 });
+    }
+    if (roster.specialRules.includes(specialRules.briberyAndCorruption)) {
+      result.push({ key: "dodgyRep", max: 1, cost: 80_000 });
+    } else {
+      result.push({ key: "dodgyRep", max: 1, cost: 120_000 });
+    }
+    result.push({ key: "bugman", max: 1, cost: 100_000 });
+    result.push({ key: "sportsWiz", max: 1, cost: 150_000 });
+  }
+  return result;
+}

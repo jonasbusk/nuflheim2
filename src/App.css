@@ -100,8 +100,8 @@ footer {
     width: 3rem;
   }
   tr td:nth-child(3) {
-    text-align: right;
-    width: 1rem;
+    text-align: center;
+    width: 1.5rem;
   }
   tr td:nth-child(4) {
     text-align: right;
@@ -205,4 +205,29 @@ td.player-skills span {
 
 td.player-skills span.skill-special {
   font-style: italic;
+}
+
+#available-inducements-table {
+  tr {
+    height: 2rem;
+  }
+
+  tr td:nth-child(1) {
+    padding-right: 1rem;
+  }
+  tr td:nth-child(2) {
+    width: 3rem;
+  }
+  tr td:nth-child(3) {
+    text-align: center;
+    width: 1.5rem;
+  }
+  tr td:nth-child(4) {
+    text-align: right;
+    width: 5rem;
+  }
+  tr td:nth-child(5) {
+    text-align: right;
+    width: 6rem;
+  }
 }

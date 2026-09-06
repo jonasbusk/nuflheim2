@@ -22,9 +22,11 @@ import {
   variants,
   rosters,
   starPlayers,
+  getAvailableInducements,
 } from "./data";
-import PlayerTable from "./PlayerTable";
 import { useTeamUrlState } from "./useTeamUrlState";
+import PlayerTable from "./PlayerTable";
+import Inducements from "./Inducements";
 
 function Team() {
   const defaultTeam: TeamState = {
@@ -41,6 +43,7 @@ function Team() {
     cheerleaders: 0,
     dedicatedFans: 0,
     apothecary: 0,
+    inducements: {},
   };
 
   // Store entire team state in an object, persisted in the URL
@@ -64,6 +67,8 @@ function Team() {
   const maxApothecary = 1;
   // TODO: Check Sevens Matched Play rules
   const maxDedicatedFans = 3;
+
+  const availableInducements = getAvailableInducements(team);
 
   /** Check if a player profile is available for the given team state. */
   function playsForTeam(p: PlayerProfile, t: TeamState): boolean {
@@ -90,6 +95,7 @@ function Team() {
         cheerleaders: 0,
         dedicatedFans: 0,
         apothecary: 0,
+        inducements: {},
       });
     }
   }
@@ -120,10 +126,10 @@ function Team() {
 
   /** Set the team favouredOf special rule and filter the team players. */
   function setFavouredOf(favouredOf: number): void {
-    setTeam(filterTeamPlayers({ ...team, favouredOf: favouredOf }));
+    setTeam(filterTeamPlayers({ ...team, favouredOf: favouredOf, inducements: {} }));
   }
 
-    /** Remove players from the team that are not available with given team state. */
+  /** Remove players from the team that are not available with given team state. */
   function filterTeamPlayers(team: TeamState): TeamState {
     return {
       ...team,
@@ -215,6 +221,9 @@ function Team() {
     teamValue += team.cheerleaders * costOfCheerleaders;
     // Note: Dedicated fans do not add to team value
     teamValue += team.apothecary * costOfApothecary;
+    teamValue += availableInducements.reduce((sum, inducement) => {
+      return sum + (team.inducements[inducement.key] || 0) * inducement.cost;
+    }, 0);
     return teamValue;
   }
 
@@ -224,6 +233,16 @@ function Team() {
     treasury -= getTeamValue();
     treasury -= team.dedicatedFans * costOfDedicatedFans;
     return treasury;
+  }
+
+  function setInducement(key: string, value: number): void {
+    const inducements = { ...team.inducements };
+    if (value > 0) {
+      inducements[key] = value;
+    } else {
+      delete inducements[key];
+    }
+    setTeam({ ...team, inducements: inducements });
   }
 
   return (
@@ -261,7 +280,10 @@ function Team() {
               className="text-right w-32"
               value={team.budget}
               onChange={(e) =>
-                setTeam({ ...team, budget: Math.max(parseInt(e.target.value) || 0, 0) })
+                setTeam({
+                  ...team,
+                  budget: Math.min(Math.max(parseInt(e.target.value) || 0, 0), 10_000_000),
+                })
               }
             />
             <FieldLabel className="text-md">GP</FieldLabel>
@@ -487,9 +509,6 @@ function Team() {
               <td className="text-right">{formatCost(costOfApothecary)}</td>
               <td className="text-right">{formatCost(costOfApothecary * team.apothecary)}</td>
             </tr>
-            {/* <tr>
-              <td colSpan={5}>&nbsp;</td>
-            </tr> */}
           </tbody>
         </table>
         <table id="team-table-3">
@@ -528,18 +547,28 @@ function Team() {
           </tbody>
         </table>
       </div>
-      <PlayerTable
-        roster={roster}
-        players={team.players}
-        swapPlayerNumber={swapPlayerNumber}
-        availableStarPlayers={availableStarPlayers}
-        getPlayerProfile={getPlayerProfile}
-        setPlayer={setPlayer}
-        setPlayerName={setPlayerName}
-        swapPlayer={swapPlayer}
-        formatCost={formatCost}
-        getPlayerValue={getPlayerValue}
-      />
+      <div className="flex flex-wrap gap-5">
+        <PlayerTable
+          roster={roster}
+          players={team.players}
+          swapPlayerNumber={swapPlayerNumber}
+          availableStarPlayers={availableStarPlayers}
+          getPlayerProfile={getPlayerProfile}
+          setPlayer={setPlayer}
+          setPlayerName={setPlayerName}
+          swapPlayer={swapPlayer}
+          formatCost={formatCost}
+          getPlayerValue={getPlayerValue}
+        />
+      </div>
+      <div className="flex flex-wrap gap-5">
+        <Inducements
+          teamInducements={team.inducements}
+          availableInducements={availableInducements}
+          setInducement={setInducement}
+          formatCost={formatCost}
+        />
+      </div>
     </div>
   );
 }
