@@ -1,7 +1,5 @@
 import { useState } from "react";
 
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
   Combobox,
   ComboboxCollection,
@@ -13,6 +11,12 @@ import {
   ComboboxLabel,
   ComboboxList,
 } from "@/components/ui/combobox";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -36,6 +40,7 @@ import {
   getAvailableInducements,
 } from "./data";
 import { useTeamUrlState } from "./useTeamUrlState";
+import PlayerDetails from "./PlayerDetails";
 import PlayerTable from "./PlayerTable";
 import Inducements from "./Inducements";
 
@@ -59,6 +64,10 @@ function Team() {
 
   // Store entire team state in an object, persisted in the URL
   const [team, setTeam] = useTeamUrlState(defaultTeam);
+
+  // Store the state of the player details dialog and the selected player number
+  const [showPlayerDetails, setShowPlayerDetails] = useState(false);
+  const [showPlayerNumber, setShowPlayerNumber] = useState<number>(0);
 
   // Store the selected player number, or 0 if no player is selected for swapping
   const [swapPlayerNumber, setSwapPlayerNumber] = useState<number>(0);
@@ -254,6 +263,10 @@ function Team() {
       delete inducements[key];
     }
     setTeam({ ...team, inducements: inducements });
+  }
+
+  function setPlayerAdvancement(playerNumber: number, advancement: string): void {
+    console.log(`Set advancement for player ${playerNumber} to ${advancement}`);
   }
 
   return (
@@ -565,6 +578,18 @@ function Team() {
         </table>
       </div>
       <div className="flex flex-wrap gap-5">
+        <Dialog open={showPlayerDetails} onOpenChange={setShowPlayerDetails}>
+          <DialogContent className="player-details-dialog">
+            <PlayerDetails
+              players={team.players}
+              showPlayerNumber={showPlayerNumber}
+              getPlayerProfile={getPlayerProfile}
+              formatCost={formatCost}
+              getPlayerValue={getPlayerValue}
+              setPlayerAdvancement={setPlayerAdvancement}
+            />
+          </DialogContent>
+        </Dialog>
         <PlayerTable
           roster={roster}
           players={team.players}
@@ -576,6 +601,8 @@ function Team() {
           swapPlayer={swapPlayer}
           formatCost={formatCost}
           getPlayerValue={getPlayerValue}
+          setShowPlayerDialog={setShowPlayerDetails}
+          setShowPlayerNumber={setShowPlayerNumber}
         />
       </div>
       <div className="flex flex-wrap gap-5">

@@ -27,7 +27,7 @@ h1 {
 }
 
 header {
-  padding: .5rem;
+  padding: 0.5rem;
   margin-bottom: 1rem;
   background-color: var(--primary);
   color: var(--primary-foreground);
@@ -46,12 +46,12 @@ main {
   margin: 0 auto;
   flex: 1;
   padding: 1rem;
-  font-size: .9rem;
+  font-size: 0.9rem;
 }
 
 footer {
   text-align: center;
-  font-size: .8rem;
+  font-size: 0.8rem;
   padding: 3rem;
   margin-top: 1rem;
   border-top: 1px solid var(--border);
@@ -77,13 +77,16 @@ footer {
   padding: 10px;
 }
 
-#team-table-1, #team-table-2, #team-table-3 {
+#team-table-1,
+#team-table-2,
+#team-table-3 {
   tr {
     height: 2rem;
   }
 }
 
-#team-table-1, #team-table-3 {
+#team-table-1,
+#team-table-3 {
   tr td:nth-child(1) {
     padding-right: 1rem;
   }
@@ -166,6 +169,7 @@ footer {
 
   div.keywords {
     font-size: 0.6rem;
+    margin-top: -0.2rem;
     padding: 0.1rem 0.5rem;
   }
 }
@@ -205,6 +209,35 @@ td.player-skills span {
 
 td.player-skills span.skill-special {
   font-style: italic;
+}
+
+.player-details-dialog {
+  max-width: 700px;
+  /* padding-top: 2rem; */
+}
+
+.player-details-dialog table {
+  width: 100%;
+  margin-top: 1rem;
+  text-align: center;
+
+  th {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    border: 1px solid var(--primary);
+    padding: 0.2rem 0.2rem;
+    font-style: italic;
+  }
+
+  th,
+  td {
+    padding: 0.1rem 0.5rem;
+  }
+
+  div.keywords {
+    font-size: 0.6rem;
+    margin-top: -0.2rem;
+  }
 }
 
 #available-inducements-table {

@@ -25,6 +25,8 @@ function PlayerTable({
   swapPlayer,
   formatCost,
   getPlayerValue,
+  setShowPlayerDialog,
+  setShowPlayerNumber,
 }: {
   roster: Roster;
   players: (Player | null)[];
@@ -36,6 +38,8 @@ function PlayerTable({
   swapPlayer: (playerNumber: number) => void;
   formatCost: (cost: number) => string;
   getPlayerValue: (player: Player | null) => number;
+  setShowPlayerDialog: (show: boolean) => void;
+  setShowPlayerNumber: (playerNumber: number) => void;
 }) {
   /** Render the skills and traits of a player as a formatted list of elements. */
   function renderPlayerSkills(player: Player | null): JSX.Element {
@@ -54,6 +58,11 @@ function PlayerTable({
       );
     }
     return <>{result.flatMap((s, i) => (i > 0 ? [", ", s] : [s]))}</>;
+  }
+
+  function showPlayerDetails(playerNumber: number) {
+    setShowPlayerNumber(playerNumber);
+    setShowPlayerDialog(true);
   }
 
   return (
@@ -92,9 +101,9 @@ function PlayerTable({
               <td className="player-position">
                 <Select
                   items={[
-                    {label: "-", value: "null"},
+                    { label: "-", value: "null" },
                     ...roster.playerProfiles.map((p) => ({ label: p.position, value: p.key })),
-                    ...availableStarPlayers.map((p) => ({ label: "Star Player", value: p.key }))
+                    ...availableStarPlayers.map((p) => ({ label: "Star Player", value: p.key })),
                   ]}
                   value={player?.key || "null"}
                   onValueChange={(value) => value && setPlayer(playerNumber, value)}
@@ -130,14 +139,42 @@ function PlayerTable({
                 </Select>
                 <div className="keywords">{profile?.keywords.join(", ")}</div>
               </td>
-              <td className="player-char">{profile?.ma}</td>
-              <td className="player-char">{profile?.st}</td>
-              <td className="player-char">{profile ? profile.ag + "+" : ""}</td>
-              <td className="player-char">
+              <td
+                className={"player-char" + (profile ? " cursor-pointer" : "")}
+                onClick={() => profile && showPlayerDetails(playerNumber)}
+              >
+                {profile?.ma}
+              </td>
+              <td
+                className={"player-char" + (profile ? " cursor-pointer" : "")}
+                onClick={() => profile && showPlayerDetails(playerNumber)}
+              >
+                {profile?.st}
+              </td>
+              <td
+                className={"player-char" + (profile ? " cursor-pointer" : "")}
+                onClick={() => profile && showPlayerDetails(playerNumber)}
+              >
+                {profile ? profile.ag + "+" : ""}
+              </td>
+              <td
+                className={"player-char" + (profile ? " cursor-pointer" : "")}
+                onClick={() => profile && showPlayerDetails(playerNumber)}
+              >
                 {profile ? (profile.pa ? profile.pa + "+" : "-") : ""}
               </td>
-              <td className="player-char">{profile ? profile.av + "+" : ""}</td>
-              <td className="player-skills">{renderPlayerSkills(player)}</td>
+              <td
+                className={"player-char" + (profile ? " cursor-pointer" : "")}
+                onClick={() => profile && showPlayerDetails(playerNumber)}
+              >
+                {profile ? profile.av + "+" : ""}
+              </td>
+              <td
+                className={"player-skills" + (profile ? " cursor-pointer" : "")}
+                onClick={() => profile && showPlayerDetails(playerNumber)}
+              >
+                {renderPlayerSkills(player)}
+              </td>
               <td className="player-value">{player ? formatCost(getPlayerValue(player)) : ""}</td>
               <td
                 className={
