@@ -5,6 +5,7 @@
 export interface TeamState {
   variant: keyof typeof variants; // The selected rules variant
   budget: number; // The total team budget
+  valueIncrease: boolean; // Whether player advancements increase value
   name: string; // Team name
   coach: string; // Coach name
   roster: string; // Key to the selected roster
@@ -26,8 +27,24 @@ export interface TeamState {
  */
 // Note: Should be as small as possible
 export interface Player {
-  key: string; // Key to the player profile
-  name?: string; // Player name
+  /** Key to look up the player profile. */
+  key: string;
+  /** Player name. */
+  name?: string;
+  /** Movement Allowance improvement modifier. */
+  ma?: number;
+  /** Strength improvement modifier. */
+  st?: number;
+  /** Agility improvement modifier. */
+  ag?: number;
+  /** Passing Ability improvement modifier. */
+  pa?: number;
+  /** Armour Value improvement modifier. */
+  av?: number;
+  /** Primary skill advancements. */
+  ps?: (keyof typeof skills)[];
+  /** Secondary skill advancements. */
+  ss?: (keyof typeof skills)[];
 }
 
 /** A team roster. */
@@ -44,24 +61,40 @@ export interface Roster {
 
 /** Base characteristics of a normal player or star player. */
 export interface PlayerProfile {
-  key: string; // Unique key of the player profile, used for lookup
+  /** Unique key of the player profile, used for lookup. */
+  key: string;
+  /** Position nameof the player. */
   position: string;
+  /** Keywords the player has. */
   keywords: string[];
+  /** Cost to hire the player. */
   cost: number;
+  /** Movement Allowance. */
   ma: number;
+  /** Strength. */
   st: number;
+  /** Agility. */
   ag: number;
+  /** Passing Ability. */
   pa?: number;
+  /** Armour Value. */
   av: number;
+  /** Skills and traits. */
   skills: string[];
-  // Normal players
-  primary?: string; // Primary skill access
-  secondary?: string; // Secondary skill access
-  qty?: number; // Allowed quantity
-  // Star players
+  // Properties for normal playes
+  /** Primary skill access. */
+  primary?: string;
+  /** Secondary skill access. */
+  secondary?: string;
+  /** Allowed quantity. */
+  qty?: number;
+  // Properties for star players
+  /** Star player name. */
   name?: string;
-  playsFor?: string[]; // List of leagues and special rules the star player plays for
-  specialRule?: string; // Star player special rule
+  /** List of leagues and special rules the star player plays for. */
+  playsFor?: string[];
+  /** Star player special rule. */
+  specialRule?: string;
 }
 
 // Constants
@@ -243,6 +276,8 @@ export const skills = {
   unchannelledFury: "Unchannelled Fury",
   unsteady: "Unsteady",
 };
+
+export const eliteSkills: (keyof typeof skills)[] = ["block", "dodge", "guard", "mightyBlow"];
 
 /** Roster leagues. */
 const leagues = {

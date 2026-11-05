@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type JSX } from "react";
 
 import {
   Combobox,
@@ -11,10 +11,7 @@ import {
   ComboboxLabel,
   ComboboxList,
 } from "@/components/ui/combobox";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 
 import {
   type TeamState,
@@ -36,8 +34,11 @@ import {
   ANY_TEAM,
   variants,
   rosters,
+  skills,
+  eliteSkills,
   starPlayers,
   getAvailableInducements,
+  STAR_PLAYER,
 } from "./data";
 import { useTeamUrlState } from "./useTeamUrlState";
 import PlayerDetails from "./PlayerDetails";
@@ -48,6 +49,7 @@ function Team() {
   const defaultTeam: TeamState = {
     variant: "standard",
     budget: 1_000_000,
+    valueIncrease: true,
     name: "",
     coach: "",
     roster: rosters[0].key,
@@ -87,6 +89,18 @@ function Team() {
   const maxApothecary = 1;
   // TODO: Check Sevens Matched Play rules
   const maxDedicatedFans = 3;
+
+  // Define costs for player advancements
+  const costOfPrimarySkill = 20_000;
+  const costOfSecondarySkill = 40_000;
+  const costOfEliteSkill = 10_000;
+  const costOfMA = 20_000;
+  const costOfST = 60_000;
+  const costOfAG = 30_000;
+  const costOfPA = 20_000;
+  const costOfAV = 10_000;
+  /** Maximum number of allowed player advancements. */
+  const maxNumAdvancements = 6;
 
   const availableInducements = getAvailableInducements(team);
 
@@ -204,7 +218,7 @@ function Team() {
     setTeam({ ...team, players: players });
   }
 
-  /** Select a player to swap or swap two players if a player is already selected */
+  /** Select a player to swap or swap two players if a player is already selected. */
   function swapPlayer(playerNumber: number): void {
     if (swapPlayerNumber === 0) {
       // Select the player to swap
@@ -226,10 +240,30 @@ function Team() {
     return `${x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} GP`;
   }
 
-  /** Get the total value of a player */
+  /** Get the total value of a player. */
   function getPlayerValue(player: Player | null): number {
     const profile = getPlayerProfile(player);
-    return profile ? profile.cost : 0;
+    let value = 0;
+    if (player && profile) {
+      value += profile.cost;
+      if (team.valueIncrease) {
+        // Primary skills
+        player.ps?.forEach((skill) => {
+          value += costOfPrimarySkill + (eliteSkills.includes(skill) ? costOfEliteSkill : 0);
+        });
+        // Secondary skills
+        player.ss?.forEach((skill) => {
+          value += costOfSecondarySkill + (eliteSkills.includes(skill) ? costOfEliteSkill : 0);
+        });
+        // Characteristic improvements
+        value += (player.ma || 0) * costOfMA;
+        value += (player.st || 0) * costOfST;
+        value += (player.ag || 0) * costOfAG;
+        value += (player.pa || 0) * costOfPA;
+        value += (player.av || 0) * costOfAV;
+      }
+    }
+    return value;
   }
 
   /** Get the total team value. */
@@ -255,6 +289,7 @@ function Team() {
     return treasury;
   }
 
+  /** Set a team inducement. */
   function setInducement(key: string, value: number): void {
     const inducements = { ...team.inducements };
     if (value > 0) {
@@ -265,8 +300,115 @@ function Team() {
     setTeam({ ...team, inducements: inducements });
   }
 
-  function setPlayerAdvancement(playerNumber: number, advancement: string): void {
-    console.log(`Set advancement for player ${playerNumber} to ${advancement}`);
+  /** Calculate the number of selected advancements for a given player. */
+  function getNumPlayerAdvancements(player: Player): number {
+    return (
+      (player.ps?.length || 0) +
+      (player.ss?.length || 0) +
+      (player.ma || 0) +
+      (player.st || 0) +
+      (player.ag || 0) +
+      (player.pa || 0) +
+      (player.av || 0)
+    );
+  }
+
+  /** Set a player skill advancement. */
+  function setSkillAdvancement(
+    playerNumber: number,
+    skill: keyof typeof skills,
+    category: string,
+  ): void {
+    const players = [...team.players];
+    const player = players[playerNumber - 1];
+    const profile = getPlayerProfile(player);
+    if (player && profile) {
+      const numAdvancements = getNumPlayerAdvancements(player);
+      // Handle primary skill
+      if (profile.primary?.includes(category)) {
+        player.ps = player.ps || [];
+        if (!player.ps.includes(skill) && numAdvancements < maxNumAdvancements) {
+          player.ps.push(skill); // Add the skill
+          player.ps.sort();
+        } else {
+          player.ps = player.ps.filter((s) => s !== skill); // Remove the skill
+        }
+        if (player.ps.length === 0) {
+          delete player.ps; // Remove the property if empty
+        }
+      }
+      // Handle secondary skill
+      if (profile.secondary?.includes(category)) {
+        player.ss = player.ss || [];
+        if (!player.ss.includes(skill) && numAdvancements < maxNumAdvancements) {
+          player.ss.push(skill); // Add the skill
+          player.ss.sort();
+        } else {
+          player.ss = player.ss.filter((s) => s !== skill); // Remove the skill
+        }
+        if (player.ss.length === 0) {
+          delete player.ss; // Remove the property if empty
+        }
+      }
+      setTeam({ ...team, players: players });
+    }
+  }
+
+  /** Set a player characteristic advancement. */
+  function setCharAdvancement(playerNumber: number, char: string): void {
+    const players = [...team.players];
+    const player = players[playerNumber - 1];
+    const profile = getPlayerProfile(player);
+    if (
+      player &&
+      profile &&
+      profile.position !== STAR_PLAYER &&
+      ["ma", "st", "ag", "pa", "av"].includes(char)
+    ) {
+      const numAdvancements = getNumPlayerAdvancements(player);
+      // Increment or reset the characteristic improvement modifier if it is allowed to be improved
+      // TODO: Handle PA value of -
+      if (
+        (player[char] || 0) < 2 &&
+        numAdvancements < maxNumAdvancements &&
+        ((char === "ma" && profile.ma + (player.ma || 0) < 9) ||
+          (char === "st" && profile.st + (player.st || 0) < 8) ||
+          (char === "ag" && profile.ag - (player.ag || 0) > 1) ||
+          (char === "pa" && (profile.pa || 0) - (player.pa || 0) > 1) ||
+          (char === "av" && profile.av + (player.av || 0) < 11))
+      ) {
+        player[char] = player[char] || 0;
+        player[char] += 1;
+      } else {
+        delete player[char];
+      }
+      setTeam({ ...team, players: players });
+    }
+  }
+
+  /** Render a player characteristic. */
+  function renderChar(player: Player, char: string): JSX.Element {
+    const profile = getPlayerProfile(player);
+    let className = "";
+    if (char in player && player[char] === 1) {
+      className = "char-improved char-improved-once";
+    } else if (char in player && player[char] === 2) {
+      className = "char-improved char-improved-twice";
+    }
+    if (profile && char === "ma") {
+      return <span className={className}>{profile.ma + (player?.ma || 0)}</span>;
+    } else if (profile && char === "st") {
+      return <span className={className}>{profile.st + (player?.st || 0)}</span>;
+    } else if (profile && char === "ag") {
+      return <span className={className}>{profile.ag - (player?.ag || 0) + "+"}</span>;
+    } else if (profile && char === "pa") {
+      return (
+        <span className={className}>{profile.pa ? profile.pa - (player?.pa || 0) + "+" : "-"}</span>
+      );
+    } else if (profile && char === "av") {
+      return <span className={className}>{profile.av + (player?.av || 0) + "+"}</span>;
+    }
+    return <span></span>;
   }
 
   return (
@@ -274,7 +416,7 @@ function Team() {
       <Separator />
       <div className="flex flex-wrap gap-5">
         <FieldLabel className="text-md font-bold">Settings:</FieldLabel>
-        <FieldGroup className="grid max-w-sm grid-cols-2">
+        <FieldGroup className="grid max-w-xl grid-cols-3">
           <Field orientation="horizontal">
             <FieldLabel className="text-md">Variant:</FieldLabel>
             <Select
@@ -311,6 +453,14 @@ function Team() {
               }
             />
             <FieldLabel className="text-md">GP</FieldLabel>
+          </Field>
+          <Field orientation="horizontal">
+            <FieldLabel className="text-md">Player value increase:</FieldLabel>
+            <Switch
+              id="advancements-cost-gold"
+              checked={team.valueIncrease}
+              onCheckedChange={(checked) => setTeam({ ...team, valueIncrease: checked })}
+            />
           </Field>
         </FieldGroup>
       </div>
@@ -583,10 +733,14 @@ function Team() {
             <PlayerDetails
               players={team.players}
               showPlayerNumber={showPlayerNumber}
+              maxNumAdvancements={maxNumAdvancements}
               getPlayerProfile={getPlayerProfile}
               formatCost={formatCost}
               getPlayerValue={getPlayerValue}
-              setPlayerAdvancement={setPlayerAdvancement}
+              getNumPlayerAdvancements={getNumPlayerAdvancements}
+              setCharAdvancement={setCharAdvancement}
+              setSkillAdvancement={setSkillAdvancement}
+              renderChar={renderChar}
             />
           </DialogContent>
         </Dialog>
@@ -603,6 +757,7 @@ function Team() {
           getPlayerValue={getPlayerValue}
           setShowPlayerDialog={setShowPlayerDetails}
           setShowPlayerNumber={setShowPlayerNumber}
+          renderChar={renderChar}
         />
       </div>
       <div className="flex flex-wrap gap-5">

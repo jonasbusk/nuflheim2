@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { type Player, type PlayerProfile, type Roster, STAR_PLAYER } from "./data";
+import { type Player, type PlayerProfile, type Roster, skills, STAR_PLAYER } from "./data";
 
 function PlayerTable({
   roster,
@@ -27,6 +27,7 @@ function PlayerTable({
   getPlayerValue,
   setShowPlayerDialog,
   setShowPlayerNumber,
+  renderChar,
 }: {
   roster: Roster;
   players: (Player | null)[];
@@ -40,16 +41,39 @@ function PlayerTable({
   getPlayerValue: (player: Player | null) => number;
   setShowPlayerDialog: (show: boolean) => void;
   setShowPlayerNumber: (playerNumber: number) => void;
+  renderChar: (player: Player, char: string) => JSX.Element;
 }) {
   /** Render the skills and traits of a player as a formatted list of elements. */
   function renderPlayerSkills(player: Player | null): JSX.Element {
     const profile = getPlayerProfile(player);
+    // Add starting skills to the list
     const result =
       profile?.skills.map((s) => (
         <span key={s} className="skill-default">
           {s}
         </span>
       )) || [];
+    // Add primary skill advancements to the list if present
+    if (player?.ps) {
+      result.push(
+        ...player.ps.map((s) => (
+          <span key={s} className="skill-advancement">
+            {skills[s] as string}'
+          </span>
+        )),
+      );
+    }
+    // Add secondary skill advancements to the list if present
+    if (player?.ss) {
+      result.push(
+        ...player.ss.map((s) => (
+          <span key={s} className="skill-advancement">
+            {skills[s] as string}"
+          </span>
+        )),
+      );
+    }
+    // Add special rule to the list if present
     if (profile?.specialRule) {
       result.push(
         <span key="s" className="skill-special">
@@ -70,15 +94,33 @@ function PlayerTable({
       <thead>
         <tr>
           <th></th>
-          <th className="text-left">Name</th>
-          <th className="text-left">Position</th>
-          <th className="text-center">MA</th>
-          <th className="text-center">ST</th>
-          <th className="text-center">AG</th>
-          <th className="text-center">PA</th>
-          <th className="text-center">AV</th>
-          <th className="text-left">Skills & Traits</th>
-          <th className="text-center">Value</th>
+          <th className="text-left" title="Player name">
+            Name
+          </th>
+          <th className="text-left" title="Player position">
+            Position
+          </th>
+          <th className="text-center" title="Move Allowance">
+            MA
+          </th>
+          <th className="text-center" title="Strength">
+            ST
+          </th>
+          <th className="text-center" title="Agility">
+            AG
+          </th>
+          <th className="text-center" title="Passing Ability">
+            PA
+          </th>
+          <th className="text-center" title="Armour Value">
+            AV
+          </th>
+          <th className="text-left" title="Skills and Traits">
+            Skills & Traits
+          </th>
+          <th className="text-center" title="Current player value">
+            Value
+          </th>
           <th></th>
         </tr>
       </thead>
@@ -143,31 +185,31 @@ function PlayerTable({
                 className={"player-char" + (profile ? " cursor-pointer" : "")}
                 onClick={() => profile && showPlayerDetails(playerNumber)}
               >
-                {profile?.ma}
+                {player && renderChar(player, "ma")}
               </td>
               <td
                 className={"player-char" + (profile ? " cursor-pointer" : "")}
                 onClick={() => profile && showPlayerDetails(playerNumber)}
               >
-                {profile?.st}
+                {player && renderChar(player, "st")}
               </td>
               <td
                 className={"player-char" + (profile ? " cursor-pointer" : "")}
                 onClick={() => profile && showPlayerDetails(playerNumber)}
               >
-                {profile ? profile.ag + "+" : ""}
+                {player && renderChar(player, "ag")}
               </td>
               <td
                 className={"player-char" + (profile ? " cursor-pointer" : "")}
                 onClick={() => profile && showPlayerDetails(playerNumber)}
               >
-                {profile ? (profile.pa ? profile.pa + "+" : "-") : ""}
+                {player && renderChar(player, "pa")}
               </td>
               <td
                 className={"player-char" + (profile ? " cursor-pointer" : "")}
                 onClick={() => profile && showPlayerDetails(playerNumber)}
               >
-                {profile ? profile.av + "+" : ""}
+                {player && renderChar(player, "av")}
               </td>
               <td
                 className={"player-skills" + (profile ? " cursor-pointer" : "")}

@@ -1,38 +1,61 @@
 import { type JSX } from "react";
 
-import { type Player, type PlayerProfile, skills } from "./data";
+import { type Player, type PlayerProfile, skills, STAR_PLAYER } from "./data";
 
 function PlayerDetails({
   players,
   showPlayerNumber: playerNumber,
+  maxNumAdvancements,
   getPlayerProfile,
   formatCost,
   getPlayerValue,
-  setPlayerAdvancement,
+  getNumPlayerAdvancements,
+  setCharAdvancement,
+  setSkillAdvancement,
+  renderChar,
 }: {
   players: (Player | null)[];
   showPlayerNumber: number;
+  maxNumAdvancements: number;
   getPlayerProfile: (player: Player | null) => PlayerProfile | null;
   formatCost: (cost: number) => string;
   getPlayerValue: (player: Player | null) => number;
-  setPlayerAdvancement: (playerNumber: number, advancement: string) => void;
+  getNumPlayerAdvancements: (player: Player) => number;
+  setCharAdvancement: (playerNumber: number, char: string) => void;
+  setSkillAdvancement: (playerNumber: number, skill: keyof typeof skills, category: string) => void;
+  renderChar: (player: Player, char: string) => JSX.Element;
 }) {
   const player = players[playerNumber - 1];
   const profile = getPlayerProfile(player);
-  // const isStarPlayer = profile?.position === STAR_PLAYER;
+  const isStarPlayer = profile?.position === STAR_PLAYER;
 
   function renderSkill(skill: keyof typeof skills, category: string): JSX.Element {
-    // TODO: Create lookup for skill category.
     if (profile?.skills.includes(skills[skill] as string)) {
-      return <span className="font-bold">{skills[skill] as string}</span>;
-    } else if (!profile?.primary?.includes(category) && !profile?.secondary?.includes(category)) {
-      return <span className="text-gray-400">{skills[skill] as string}</span>;
-    } else {
+      // Starting skill
+      return <span className="skill-starting">{skills[skill] as string}</span>;
+    } else if (player?.ps?.includes(skill) || player?.ss?.includes(skill)) {
+      // Selected skill advancement
       return (
-        <span onClick={() => setPlayerAdvancement(playerNumber, skill)}>
+        <span
+          className="skill-selected"
+          onClick={() => setSkillAdvancement(playerNumber, skill, category)}
+        >
           {skills[skill] as string}
         </span>
       );
+    } else if (profile?.primary?.includes(category) || profile?.secondary?.includes(category)) {
+      // Available skill advancement
+      return (
+        <span
+          className="skill-available"
+          onClick={() => setSkillAdvancement(playerNumber, skill, category)}
+        >
+          {skills[skill] as string}
+        </span>
+      );
+    } else {
+      // Unavailable skill
+      return <span className="skill-unavailable">{skills[skill] as string}</span>;
     }
   }
 
@@ -42,16 +65,39 @@ function PlayerDetails({
       <table>
         <thead>
           <tr>
-            <th className="text-left">Name</th>
-            <th className="text-left">Position</th>
-            <th>MA</th>
-            <th>ST</th>
-            <th>AG</th>
-            <th>PA</th>
-            <th>AV</th>
-            <th>Primary</th>
-            <th>Secondary</th>
-            <th>Value</th>
+            <th className="w-50 text-left" title="Player name">
+              Name
+            </th>
+            <th className="text-left" title="Player position">
+              Position
+            </th>
+            <th className="w-8" title="Move Allowance">
+              MA
+            </th>
+            <th className="w-8" title="Strength">
+              ST
+            </th>
+            <th className="w-8" title="Agility">
+              AG
+            </th>
+            <th className="w-8" title="Passing Ability">
+              PA
+            </th>
+            <th className="w-10" title="Armour Value">
+              AV
+            </th>
+            <th className="w-10" title="Primary skill access">
+              P
+            </th>
+            <th className="w-10" title="Secondary skill access">
+              S
+            </th>
+            <th className="w-10" title="Player level">
+              Level
+            </th>
+            <th className="w-25" title="Current player value">
+              Value
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -61,26 +107,56 @@ function PlayerDetails({
               {profile?.position}
               <div className="keywords">{profile?.keywords.join(", ")}</div>
             </td>
-            <td>{profile?.ma}</td>
-            <td>{profile?.st}</td>
-            <td>{profile ? profile.ag + "+" : ""}</td>
-            <td>{profile ? (profile.pa ? profile.pa + "+" : "-") : ""}</td>
-            <td>{profile ? profile.av + "+" : ""}</td>
+            <td
+              className={isStarPlayer ? "" : "cursor-pointer"}
+              onClick={() => !isStarPlayer && setCharAdvancement(playerNumber, "ma")}
+            >
+              {player && renderChar(player, "ma")}
+            </td>
+            <td
+              className={isStarPlayer ? "" : "cursor-pointer"}
+              onClick={() => !isStarPlayer && setCharAdvancement(playerNumber, "st")}
+            >
+              {player && renderChar(player, "st")}
+            </td>
+            <td
+              className={isStarPlayer ? "" : "cursor-pointer"}
+              onClick={() => !isStarPlayer && setCharAdvancement(playerNumber, "ag")}
+            >
+              {player && renderChar(player, "ag")}
+            </td>
+            <td
+              className={isStarPlayer ? "" : "cursor-pointer"}
+              onClick={() => !isStarPlayer && setCharAdvancement(playerNumber, "pa")}
+            >
+              {player && renderChar(player, "pa")}
+            </td>
+            <td
+              className={isStarPlayer ? "" : "cursor-pointer"}
+              onClick={() => !isStarPlayer && setCharAdvancement(playerNumber, "av")}
+            >
+              {player && renderChar(player, "av")}
+            </td>
             <td>{profile?.primary || "-"}</td>
             <td>{profile?.secondary || "-"}</td>
-            <td>{player ? formatCost(getPlayerValue(player)) : ""}</td>
+            <td>
+              {isStarPlayer
+                ? "★"
+                : (player ? getNumPlayerAdvancements(player) : 0) + "/" + maxNumAdvancements}
+            </td>
+            <td className="text-right">{player ? formatCost(getPlayerValue(player)) : ""}</td>
           </tr>
         </tbody>
       </table>
       <table className="skills-table">
         <thead>
           <tr>
-            <th>Agility</th>
-            <th>Devious</th>
-            <th>General</th>
-            <th>Mutation</th>
-            <th>Passing</th>
-            <th>Strength</th>
+            <th title="Agility skills">Agility</th>
+            <th title="Devious skills">Devious</th>
+            <th title="General skills">General</th>
+            <th title="Mutation skills">Mutation</th>
+            <th title="Passing skills">Passing</th>
+            <th title="Strength skills">Strength</th>
           </tr>
         </thead>
         <tbody>
