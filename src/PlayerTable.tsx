@@ -50,7 +50,7 @@ function PlayerTable({
     const result =
       profile?.skills.map((s) => (
         <span key={s} className="skill-default">
-          {s}
+          {skills[s]}
         </span>
       )) || [];
     // Add primary skill advancements to the list if present
@@ -58,7 +58,7 @@ function PlayerTable({
       result.push(
         ...player.ps.map((s) => (
           <span key={s} className="skill-advancement">
-            {skills[s] as string}'
+            {skills[s]}'
           </span>
         )),
       );
@@ -68,7 +68,7 @@ function PlayerTable({
       result.push(
         ...player.ss.map((s) => (
           <span key={s} className="skill-advancement">
-            {skills[s] as string}"
+            {skills[s]}"
           </span>
         )),
       );

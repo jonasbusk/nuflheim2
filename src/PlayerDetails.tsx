@@ -30,9 +30,9 @@ function PlayerDetails({
   const isStarPlayer = profile?.position === STAR_PLAYER;
 
   function renderSkill(skill: keyof typeof skills, category: string): JSX.Element {
-    if (profile?.skills.includes(skills[skill] as string)) {
+    if (profile?.skills.includes(skill)) {
       // Starting skill
-      return <span className="skill-starting">{skills[skill] as string}</span>;
+      return <span className="skill-starting">{skills[skill]}</span>;
     } else if (player?.ps?.includes(skill) || player?.ss?.includes(skill)) {
       // Selected skill advancement
       return (
@@ -40,7 +40,7 @@ function PlayerDetails({
           className="skill-selected"
           onClick={() => setSkillAdvancement(playerNumber, skill, category)}
         >
-          {skills[skill] as string}
+          {skills[skill]}
         </span>
       );
     } else if (profile?.primary?.includes(category) || profile?.secondary?.includes(category)) {
@@ -50,12 +50,12 @@ function PlayerDetails({
           className="skill-available"
           onClick={() => setSkillAdvancement(playerNumber, skill, category)}
         >
-          {skills[skill] as string}
+          {skills[skill]}
         </span>
       );
     } else {
       // Unavailable skill
-      return <span className="skill-unavailable">{skills[skill] as string}</span>;
+      return <span className="skill-unavailable">{skills[skill]}</span>;
     }
   }
 
