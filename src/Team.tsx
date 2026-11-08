@@ -1,5 +1,6 @@
 import { useState, type JSX } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   Combobox,
   ComboboxCollection,
@@ -44,6 +45,9 @@ import { useTeamUrlState } from "./useTeamUrlState";
 import PlayerDetails from "./PlayerDetails";
 import PlayerTable from "./PlayerTable";
 import Inducements from "./Inducements";
+import { downloadPDF } from "./downloadPDF";
+import { PDFViewer } from "@react-pdf/renderer";
+import TeamDocument from "./TeamDocument";
 
 function Team() {
   const defaultTeam: TeamState = {
@@ -463,6 +467,27 @@ function Team() {
             />
           </Field>
         </FieldGroup>
+        <Button
+          className="cursor-pointer"
+          onClick={() =>
+            downloadPDF(
+              team,
+              costOfReRolls,
+              costOfAssistantCoaches,
+              costOfCheerleaders,
+              costOfDedicatedFans,
+              costOfApothecary,
+              getTreasury(),
+              getTeamValue(),
+              availableInducements,
+              getPlayerProfile,
+              getPlayerValue,
+              formatCost,
+            )
+          }
+        >
+          Download PDF
+        </Button>
       </div>
       <Separator />
       <div className="flex flex-wrap gap-5">
@@ -716,13 +741,13 @@ function Team() {
               </td>
             </tr>
             <tr>
-              <td colSpan={5}>&nbsp;</td>
+              <td colSpan={2}>&nbsp;</td>
             </tr>
             <tr>
-              <td colSpan={5}>&nbsp;</td>
+              <td colSpan={2}>&nbsp;</td>
             </tr>
             <tr>
-              <td colSpan={5}>&nbsp;</td>
+              <td colSpan={2}>&nbsp;</td>
             </tr>
           </tbody>
         </table>
@@ -768,6 +793,25 @@ function Team() {
           formatCost={formatCost}
         />
       </div>
+      {import.meta.env.DEV && (
+        <PDFViewer width="100%" height={800}>
+          <TeamDocument
+            team={team}
+            costOfReRolls={costOfReRolls}
+            costOfAssistantCoaches={costOfAssistantCoaches}
+            costOfCheerleaders={costOfCheerleaders}
+            costOfDedicatedFans={costOfDedicatedFans}
+            costOfApothecary={costOfApothecary}
+            treasury={getTreasury()}
+            teamValue={getTeamValue()}
+            availableInducements={availableInducements}
+            getPlayerProfile={getPlayerProfile}
+            getPlayerValue={getPlayerValue}
+            formatCost={formatCost}
+          />
+        </PDFViewer>
+      )}
+      {import.meta.env.DEV && <pre>{JSON.stringify(team, null, 2)}</pre>}
     </div>
   );
 }

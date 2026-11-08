@@ -78,7 +78,7 @@ function PlayerTable({
       result.push(
         <span key="s" className="skill-special">
           {profile.specialRule}
-        </span>,
+        </span>
       );
     }
     return <>{result.flatMap((s, i) => (i > 0 ? [", ", s] : [s]))}</>;
