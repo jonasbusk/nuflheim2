@@ -32,6 +32,7 @@ import {
   type Player,
   type PlayerProfile,
   type Roster,
+  type Char,
   ANY_TEAM,
   variants,
   rosters,
@@ -359,16 +360,11 @@ function Team() {
   }
 
   /** Set a player characteristic advancement. */
-  function setCharAdvancement(playerNumber: number, char: string): void {
+  function setCharAdvancement(playerNumber: number, char: Char): void {
     const players = [...team.players];
     const player = players[playerNumber - 1];
     const profile = getPlayerProfile(player);
-    if (
-      player &&
-      profile &&
-      profile.position !== STAR_PLAYER &&
-      ["ma", "st", "ag", "pa", "av"].includes(char)
-    ) {
+    if (player && profile && profile.position !== STAR_PLAYER) {
       const numAdvancements = getNumPlayerAdvancements(player);
       // Increment or reset the characteristic improvement modifier if it is allowed to be improved
       // TODO: Handle PA value of -
@@ -381,8 +377,7 @@ function Team() {
           (char === "pa" && (profile.pa || 0) - (player.pa || 0) > 1) ||
           (char === "av" && profile.av + (player.av || 0) < 11))
       ) {
-        player[char] = player[char] || 0;
-        player[char] += 1;
+        player[char] = (player[char] || 0) + 1;
       } else {
         delete player[char];
       }
@@ -391,26 +386,26 @@ function Team() {
   }
 
   /** Render a player characteristic. */
-  function renderChar(player: Player, char: string): JSX.Element {
+  function renderChar(player: Player, char: Char): JSX.Element {
     const profile = getPlayerProfile(player);
     let className = "";
-    if (char in player && player[char] === 1) {
+    if (player[char] === 1) {
       className = "char-improved char-improved-once";
-    } else if (char in player && player[char] === 2) {
+    } else if (player[char] === 2) {
       className = "char-improved char-improved-twice";
     }
     if (profile && char === "ma") {
-      return <span className={className}>{profile.ma + (player?.ma || 0)}</span>;
+      return <span className={className}>{profile.ma + (player.ma || 0)}</span>;
     } else if (profile && char === "st") {
-      return <span className={className}>{profile.st + (player?.st || 0)}</span>;
+      return <span className={className}>{profile.st + (player.st || 0)}</span>;
     } else if (profile && char === "ag") {
-      return <span className={className}>{profile.ag - (player?.ag || 0) + "+"}</span>;
+      return <span className={className}>{profile.ag - (player.ag || 0) + "+"}</span>;
     } else if (profile && char === "pa") {
       return (
-        <span className={className}>{profile.pa ? profile.pa - (player?.pa || 0) + "+" : "-"}</span>
+        <span className={className}>{profile.pa ? profile.pa - (player.pa || 0) + "+" : "-"}</span>
       );
     } else if (profile && char === "av") {
-      return <span className={className}>{profile.av + (player?.av || 0) + "+"}</span>;
+      return <span className={className}>{profile.av + (player.av || 0) + "+"}</span>;
     }
     return <span></span>;
   }

@@ -47,6 +47,9 @@ export interface Player {
   ss?: (keyof typeof skills)[];
 }
 
+/** Keys of the player characteristic improvement modifiers. */
+export type Char = "ma" | "st" | "ag" | "pa" | "av";
+
 /** A team roster. */
 export interface Roster {
   key: string; // Unique key of the roster, used for lookup

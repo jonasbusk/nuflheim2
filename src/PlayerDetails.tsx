@@ -1,6 +1,6 @@
 import { type JSX } from "react";
 
-import { type Player, type PlayerProfile, skills, STAR_PLAYER } from "./data";
+import { type Char, type Player, type PlayerProfile, skills, STAR_PLAYER } from "./data";
 
 function PlayerDetails({
   players,
@@ -21,9 +21,9 @@ function PlayerDetails({
   formatCost: (cost: number) => string;
   getPlayerValue: (player: Player | null) => number;
   getNumPlayerAdvancements: (player: Player) => number;
-  setCharAdvancement: (playerNumber: number, char: string) => void;
+  setCharAdvancement: (playerNumber: number, char: Char) => void;
   setSkillAdvancement: (playerNumber: number, skill: keyof typeof skills, category: string) => void;
-  renderChar: (player: Player, char: string) => JSX.Element;
+  renderChar: (player: Player, char: Char) => JSX.Element;
 }) {
   const player = players[playerNumber - 1];
   const profile = getPlayerProfile(player);

@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { type Player, type PlayerProfile, type Roster, skills, STAR_PLAYER } from "./data";
+import { type Char, type Player, type PlayerProfile, type Roster, skills, STAR_PLAYER } from "./data";
 
 function PlayerTable({
   roster,
@@ -41,7 +41,7 @@ function PlayerTable({
   getPlayerValue: (player: Player | null) => number;
   setShowPlayerDialog: (show: boolean) => void;
   setShowPlayerNumber: (playerNumber: number) => void;
-  renderChar: (player: Player, char: string) => JSX.Element;
+  renderChar: (player: Player, char: Char) => JSX.Element;
 }) {
   /** Render the skills and traits of a player as a formatted list of elements. */
   function renderPlayerSkills(player: Player | null): JSX.Element {

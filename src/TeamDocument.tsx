@@ -2,6 +2,7 @@ import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 import {
   type AvailableInducement,
+  type Char,
   type Player,
   type PlayerProfile,
   type Roster,
@@ -160,20 +161,20 @@ function renderPosition(profile: PlayerProfile | null): string {
   return profile?.position || "";
 }
 
-function renderChar(player: Player, profile: PlayerProfile, char: string): string {
+function renderChar(player: Player, profile: PlayerProfile, char: Char): string {
   let ticks = "";
-  ticks = char in player && player[char] === 1 ? "'" : ticks;
-  ticks = char in player && player[char] === 2 ? '"' : ticks;
-  if (profile && char === "ma") {
-    return profile.ma + (player?.ma || 0) + ticks;
-  } else if (profile && char === "st") {
-    return profile.st + (player?.st || 0) + ticks;
-  } else if (profile && char === "ag") {
-    return profile.ag - (player?.ag || 0) + "+" + ticks;
-  } else if (profile && char === "pa") {
-    return profile.pa ? profile.pa - (player?.pa || 0) + "+" + ticks : "-";
-  } else if (profile && char === "av") {
-    return profile.av + (player?.av || 0) + "+" + ticks;
+  ticks = player[char] === 1 ? "'" : ticks;
+  ticks = player[char] === 2 ? '"' : ticks;
+  if (char === "ma") {
+    return profile.ma + (player.ma || 0) + ticks;
+  } else if (char === "st") {
+    return profile.st + (player.st || 0) + ticks;
+  } else if (char === "ag") {
+    return profile.ag - (player.ag || 0) + "+" + ticks;
+  } else if (char === "pa") {
+    return profile.pa ? profile.pa - (player.pa || 0) + "+" + ticks : "-";
+  } else if (char === "av") {
+    return profile.av + (player.av || 0) + "+" + ticks;
   }
   return "";
 }
@@ -198,11 +199,11 @@ function renderSkills(player: Player, profile: PlayerProfile): React.ReactNode {
   // so keep each skill and comma in the same element to prevent bad hyphenation.
   const skills_list = [
     // Starting skills
-    ...(profile?.skills.map((s) => skills[s]) || []),
+    ...profile.skills.map((s) => skills[s]),
     // Primary skill advancements
-    ...(player?.ps?.map((s) => skills[s] + "'") || []),
+    ...(player.ps?.map((s) => skills[s] + "'") || []),
     // Secondary skill advancements
-    ...(player?.ss?.map((s) => skills[s] + '"') || []),
+    ...(player.ss?.map((s) => skills[s] + '"') || []),
   ];
   const skills_string = skills_list.map(noWrap).join(", ");
   // Add special rule (italic) to the list if present
